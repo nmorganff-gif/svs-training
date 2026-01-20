@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>System vs Shelf – Alignment Scale</title>
+
+<style>
+:root{
+  --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --border: rgba(0,0,0,.15);
+  --bg: rgba(255,255,255,.75);
+
+  --tilt-1: 7deg;
+  --tilt-2: 14deg;
+
+  --dur: 650ms;
+  --ease: cubic-bezier(.2,.8,.2,1);
+
+  --ok-bg:   rgba(60, 180, 95, 0.08);
+  --warn-bg: rgba(220, 80, 80, 0.08);
+  --bad-bg:  rgba(220, 80, 80, 0.14);
+}
+
+*{ box-sizing:border-box; margin:0; padding:0; font-family:var(--font); }
+
+body{
+  padding:12px;
+  display:flex;
+  justify-content:center;
+  background:transparent;
+  color:#000;
+}
+
+.wrap{
+  width:100%;
+  max-width:900px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:6px 14px 14px;
+  transition: background-color 350ms ease;
+}
+
+.wrap.state-ok{ background-color: var(--ok-bg); }
+.wrap.state-warn{ background-color: var(--warn-bg); }
+.wrap.state-bad{ background-color: var(--bad-bg); }
+
+.headline{
+  display:grid;
+  place-items:center;
+  margin-bottom:4px;
+}
+.headline .bubble{
+  width:100%;
+  max-width:760px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.7);
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:14px;
+  font-weight:700;
+  text-align:center;
+}
+
+.diagram{ display:grid; place-items:center; }
+
+svg{ width:100%; max-width:680px; height:auto; }
+
+.beamWrap{
+  transform-origin:300px 210px;
+  transition:transform var(--dur) var(--ease);
+}
+
+@keyframes sway{
+  0%{ transform:rotate(-5deg); }
+  50%{ transform:rotate(5deg); }
+  100%{ transform:rotate(-5deg); }
+}
+.swaying .beam{
+  animation:sway 600ms ease-in-out infinite;
+  transform-origin:300px 210px;
+}
+
+.tilt-left-1 .beamWrap{ transform:rotate(-7deg); }
+.tilt-left-2 .beamWrap{ transform:rotate(-14deg); }
+.tilt-right-1 .beamWrap{ transform:rotate(7deg); }
+.tilt-right-2 .beamWrap{ transform:rotate(14deg); }
+
+.counter{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin-top:8px;
+}
+
+.pill{
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.6);
+  padding:6px 10px;
+  border-radius:999px;
+  font-weight:600;
+  font-size:14px;
+}
+
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  justify-content:center;
+  margin-top:10px;
+}
+
+button{
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.85);
+  font-weight:600;
+  cursor:pointer;
+}
+
+.stackBox{
+  width:110px;
+  height:108px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:4px 6px;
+  justify-items:center;
+  font-size:20px;
+}
+.slot.empty{ opacity:0; }
+
+.exoModalBackdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+.exoModalBackdrop.is-open{ display:flex; }
+
+.exoModalPanel{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  max-width:560px;
+  border:1px solid var(--border);
+}
+.exoModalActions{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="wrap" id="wrap">
+  <div class="headline">
+    <div class="bubble" id="headlineBubble">🧭 Click a button to see what happens.</div>
+  </div>
+
+  <div class="diagram">
+    <svg viewBox="0 110 600 330" aria-hidden="true">
+      <path d="M150 405H450" stroke="#bbb" stroke-width="10" stroke-linecap="round"/>
+      <path d="M300 405V120" stroke="#bbb" stroke-width="12" stroke-linecap="round"/>
+      <circle cx="300" cy="210" r="8" fill="#999"/>
+
+      <g class="beamWrap">
+        <g class="beam">
+          <path d="M160 210H440" stroke="#aaa" stroke-width="10" stroke-linecap="round"/>
+          <foreignObject x="165" y="232" width="110" height="108">
+            <div xmlns="http://www.w3.org/1999/xhtml" id="shelfBox" class="stackBox"></div>
+          </foreignObject>
+          <foreignObject x="325" y="232" width="110" height="108">
+            <div xmlns="http://www.w3.org/1999/xhtml" id="systemBox" class="stackBox"></div>
+          </foreignObject>
+        </g>
+      </g>
+    </svg>
+
+    <div class="counter">
+      <div class="pill">🧺 Shelf: <span id="shelfCount">5</span></div>
+      <div class="pill">💻 System: <span id="systemCount">5</span></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button type="button" id="saleAcc">Accurate sale</button>
+    <button type="button" id="wasteNR">Waste not recorded</button>
+    <button type="button" id="deliveryMissing">Missing delivery item</button>
+    <button type="button" id="countFix">Accurate count</button>
+    <button type="button" id="restart">Restart</button>
+  </div>
+</div>
+
+<div class="exoModalBackdrop" id="maskModal">
+  <div class="exoModalPanel">
+    <h3>⚠️ Looks balanced, but something’s off</h3>
+    <p>
+      The shelf and system match, but only because mistakes cancelled each other out.<br>
+      <strong>Matching numbers isn’t proof it’s correct.</strong><br>
+      Only an accurate count puts things back in line.
+    </p>
+    <div class="exoModalActions">
+      <button type="button" id="maskReset">Accurate count</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let shelf=5, system=5;
+let hasMistake=false, maskShown=false;
+
+const wrap=document.getElementById("wrap");
+const shelfBox=document.getElementById("shelfBox");
+const systemBox=document.getElementById("systemBox");
+const shelfCount=document.getElementById("shelfCount");
+const systemCount=document.getElementById("systemCount");
+const headline=document.getElementById("headlineBubble");
+const maskModal=document.getElementById("maskModal");
+
+function draw(box,count){
+  box.innerHTML="";
+  for(let i=0;i<Math.min(count,12);i++){
+    const s=document.createElement("span");
+    s.textContent="🥫";
+    box.appendChild(s);
+  }
+}
+function render(){
+  shelfCount.textContent=shelf;
+  systemCount.textContent=system;
+  draw(shelfBox,shelf);
+  draw(systemBox,system);
+
+  wrap.className="wrap";
+  const diff=system-shelf;
+
+  if(diff===0 && !hasMistake){
+    wrap.classList.add("state-ok");
+    headline.textContent="✅ System and shelf match.";
+  }else if(diff===0 && hasMistake){
+    wrap.classList.add("state-warn");
+    headline.textContent="⚠️ Numbers match, but errors are hidden.";
+    if(!maskShown){
+      maskShown=true;
+      maskModal.classList.add("is-open");
+    }
+  }else{
+    wrap.classList.add("state-warn");
+    headline.textContent="⚠️ System and shelf are out of sync.";
+  }
+}
+
+document.getElementById("saleAcc").onclick=()=>{
+  if(!shelf)return;
+  shelf--; system--;
+  render();
+};
+document.getElementById("wasteNR").onclick=()=>{
+  if(!shelf)return;
+  shelf--; hasMistake=true;
+  render();
+};
+document.getElementById("deliveryMissing").onclick=()=>{
+  system++; hasMistake=true;
+  render();
+};
+document.getElementById("countFix").onclick=()=>{
+  system=shelf;
+  hasMistake=false;
+  maskShown=false;
+  maskModal.classList.remove("is-open");
+  render();
+};
+document.getElementById("maskReset").onclick=()=>{
+  system=shelf;
+  hasMistake=false;
+  maskShown=false;
+  maskModal.classList.remove("is-open");
+  render();
+};
+document.getElementById("restart").onclick=()=>{
+  shelf=system=5;
+  hasMistake=false;
+  maskShown=false;
+  maskModal.classList.remove("is-open");
+  render();
+};
+
+render();
+</script>
+</body>
+</html>
+
