@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>System vs Shelf – Alignment Scale</title>
 
+<meta name="robots" content="noindex, nofollow">
+
 <style>
 :root{
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -28,7 +30,7 @@ body{
   padding:12px;
   display:flex;
   justify-content:center;
-  background:transparent;
+  background:#f4f7f4;
   color:#000;
 }
 
@@ -38,7 +40,7 @@ body{
   background:var(--bg);
   border:1px solid var(--border);
   border-radius:14px;
-  padding:6px 14px 14px;
+  padding:8px 14px 16px;
   transition: background-color 350ms ease;
 }
 
@@ -49,7 +51,7 @@ body{
 .headline{
   display:grid;
   place-items:center;
-  margin-bottom:4px;
+  margin-bottom:6px;
 }
 .headline .bubble{
   width:100%;
@@ -108,7 +110,7 @@ svg{ width:100%; max-width:680px; height:auto; }
   flex-wrap:wrap;
   gap:8px;
   justify-content:center;
-  margin-top:10px;
+  margin-top:12px;
 }
 
 button{
@@ -118,6 +120,7 @@ button{
   background:rgba(255,255,255,.85);
   font-weight:600;
   cursor:pointer;
+  white-space:nowrap;
 }
 
 .stackBox{
@@ -128,6 +131,13 @@ button{
   gap:4px 6px;
   justify-items:center;
   font-size:20px;
+}
+
+.slot{
+  width:1em;
+  height:1em;
+  display:grid;
+  place-items:center;
 }
 .slot.empty{ opacity:0; }
 
@@ -160,8 +170,11 @@ button{
 
 <body>
 <div class="wrap" id="wrap">
+
   <div class="headline">
-    <div class="bubble" id="headlineBubble">🧭 Click a button to see what happens.</div>
+    <div class="bubble" id="headlineBubble">
+      🧭 Click a button to see what happens.
+    </div>
   </div>
 
   <div class="diagram">
@@ -173,9 +186,11 @@ button{
       <g class="beamWrap">
         <g class="beam">
           <path d="M160 210H440" stroke="#aaa" stroke-width="10" stroke-linecap="round"/>
+
           <foreignObject x="165" y="232" width="110" height="108">
             <div xmlns="http://www.w3.org/1999/xhtml" id="shelfBox" class="stackBox"></div>
           </foreignObject>
+
           <foreignObject x="325" y="232" width="110" height="108">
             <div xmlns="http://www.w3.org/1999/xhtml" id="systemBox" class="stackBox"></div>
           </foreignObject>
@@ -190,11 +205,11 @@ button{
   </div>
 
   <div class="controls">
-    <button type="button" id="saleAcc">Accurate sale</button>
-    <button type="button" id="wasteNR">Waste not recorded</button>
-    <button type="button" id="deliveryMissing">Missing delivery item</button>
-    <button type="button" id="countFix">Accurate count</button>
-    <button type="button" id="restart">Restart</button>
+    <button id="saleAcc">Accurate sale</button>
+    <button id="wasteNR">Waste not recorded</button>
+    <button id="deliveryMissing">Missing delivery item</button>
+    <button id="countFix">Accurate count</button>
+    <button id="restart">Restart</button>
   </div>
 </div>
 
@@ -207,88 +222,105 @@ button{
       Only an accurate count puts things back in line.
     </p>
     <div class="exoModalActions">
-      <button type="button" id="maskReset">Accurate count</button>
+      <button id="maskReset">Accurate count</button>
     </div>
   </div>
 </div>
 
 <script>
-let shelf=5, system=5;
-let hasMistake=false, maskShown=false;
+let shelf = 5, system = 5;
+let hasMistake = false, maskShown = false;
 
-const wrap=document.getElementById("wrap");
-const shelfBox=document.getElementById("shelfBox");
-const systemBox=document.getElementById("systemBox");
-const shelfCount=document.getElementById("shelfCount");
-const systemCount=document.getElementById("systemCount");
-const headline=document.getElementById("headlineBubble");
-const maskModal=document.getElementById("maskModal");
+const wrap = document.getElementById("wrap");
+const shelfBox = document.getElementById("shelfBox");
+const systemBox = document.getElementById("systemBox");
+const shelfCount = document.getElementById("shelfCount");
+const systemCount = document.getElementById("systemCount");
+const headline = document.getElementById("headlineBubble");
+const maskModal = document.getElementById("maskModal");
 
-function draw(box,count){
-  box.innerHTML="";
-  for(let i=0;i<Math.min(count,12);i++){
+const SLOTS = 12;
+
+function draw(box, count){
+  box.innerHTML = "";
+  const shown = Math.min(count, SLOTS);
+
+  for(let i=0;i<SLOTS-shown;i++){
     const s=document.createElement("span");
+    s.className="slot empty";
+    s.textContent="🥫";
+    box.appendChild(s);
+  }
+  for(let i=0;i<shown;i++){
+    const s=document.createElement("span");
+    s.className="slot";
     s.textContent="🥫";
     box.appendChild(s);
   }
 }
+
 function render(){
-  shelfCount.textContent=shelf;
-  systemCount.textContent=system;
-  draw(shelfBox,shelf);
-  draw(systemBox,system);
+  shelfCount.textContent = shelf;
+  systemCount.textContent = system;
 
-  wrap.className="wrap";
-  const diff=system-shelf;
+  draw(shelfBox, shelf);
+  draw(systemBox, system);
 
-  if(diff===0 && !hasMistake){
+  wrap.className = "wrap";
+  const diff = system - shelf;
+
+  if(diff === 0 && !hasMistake){
     wrap.classList.add("state-ok");
-    headline.textContent="✅ System and shelf match.";
-  }else if(diff===0 && hasMistake){
+    headline.textContent = "✅ System and shelf match.";
+    return;
+  }
+
+  if(diff === 0 && hasMistake){
     wrap.classList.add("state-warn");
-    headline.textContent="⚠️ Numbers match, but errors are hidden.";
+    headline.textContent = "⚠️ Numbers match, but errors are hidden.";
     if(!maskShown){
-      maskShown=true;
+      maskShown = true;
       maskModal.classList.add("is-open");
     }
-  }else{
-    wrap.classList.add("state-warn");
-    headline.textContent="⚠️ System and shelf are out of sync.";
+    return;
   }
+
+  wrap.classList.add("state-warn");
+  headline.textContent = "⚠️ System and shelf are out of sync.";
 }
 
-document.getElementById("saleAcc").onclick=()=>{
-  if(!shelf)return;
+document.getElementById("saleAcc").onclick = ()=>{
+  if(!shelf) return;
   shelf--; system--;
   render();
 };
-document.getElementById("wasteNR").onclick=()=>{
-  if(!shelf)return;
-  shelf--; hasMistake=true;
+document.getElementById("wasteNR").onclick = ()=>{
+  if(!shelf) return;
+  shelf--; hasMistake = true;
   render();
 };
-document.getElementById("deliveryMissing").onclick=()=>{
-  system++; hasMistake=true;
+document.getElementById("deliveryMissing").onclick = ()=>{
+  system++; hasMistake = true;
   render();
 };
-document.getElementById("countFix").onclick=()=>{
-  system=shelf;
-  hasMistake=false;
-  maskShown=false;
+document.getElementById("countFix").onclick = ()=>{
+  system = shelf;
+  hasMistake = false;
+  maskShown = false;
   maskModal.classList.remove("is-open");
   render();
 };
-document.getElementById("maskReset").onclick=()=>{
-  system=shelf;
-  hasMistake=false;
-  maskShown=false;
+document.getElementById("maskReset").onclick = ()=>{
+  system = shelf;
+  hasMistake = false;
+  maskShown = false;
   maskModal.classList.remove("is-open");
   render();
 };
-document.getElementById("restart").onclick=()=>{
-  shelf=system=5;
-  hasMistake=false;
-  maskShown=false;
+document.getElementById("restart").onclick = ()=>{
+  shelf = system = 5;
+  hasMistake = false;
+  maskShown = false;
   maskModal.classList.remove("is-open");
   render();
 };
@@ -297,4 +329,3 @@ render();
 </script>
 </body>
 </html>
-
