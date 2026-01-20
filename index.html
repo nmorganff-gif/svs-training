@@ -10,8 +10,8 @@
 <style>
 :root{
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  --border: rgba(0,0,0,.15);
-  --bg: rgba(255,255,255,.75);
+  --border:rgba(0,0,0,.15);
+  --bg:rgba(255,255,255,.75);
 
   --tilt-1: 7deg;
   --tilt-2: 14deg;
@@ -40,7 +40,7 @@ body{
   background:var(--bg);
   border:1px solid var(--border);
   border-radius:14px;
-  padding:8px 14px 16px;
+  padding:6px 14px 14px;
   transition: background-color 350ms ease;
 }
 
@@ -51,7 +51,8 @@ body{
 .headline{
   display:grid;
   place-items:center;
-  margin-bottom:6px;
+  margin: 0 0 6px;
+  min-height: 30px;
 }
 .headline .bubble{
   width:100%;
@@ -60,39 +61,53 @@ body{
   background:rgba(255,255,255,.7);
   padding:8px 12px;
   border-radius:999px;
-  font-size:14px;
+  font-size:13.5px;
   font-weight:700;
   text-align:center;
+  line-height:1.25;
 }
 
-.diagram{ display:grid; place-items:center; }
+.diagram{
+  display:grid;
+  place-items:center;
+  margin-bottom:6px;
+}
 
-svg{ width:100%; max-width:680px; height:auto; }
+svg{
+  width:100%;
+  max-width:680px;
+  height:auto;
+}
 
+/* Tilt applies to beamWrap */
 .beamWrap{
   transform-origin:300px 210px;
   transition:transform var(--dur) var(--ease);
+  transform:rotate(0deg);
 }
 
-@keyframes sway{
-  0%{ transform:rotate(-5deg); }
-  50%{ transform:rotate(5deg); }
-  100%{ transform:rotate(-5deg); }
+/* Sway animation applies to the inner beam only */
+@keyframes sway {
+  0%   { transform: rotate(-5deg); }
+  50%  { transform: rotate( 5deg); }
+  100% { transform: rotate(-5deg); }
 }
 .swaying .beam{
-  animation:sway 600ms ease-in-out infinite;
+  animation: sway 600ms ease-in-out infinite;
   transform-origin:300px 210px;
 }
 
-.tilt-left-1 .beamWrap{ transform:rotate(-7deg); }
-.tilt-left-2 .beamWrap{ transform:rotate(-14deg); }
-.tilt-right-1 .beamWrap{ transform:rotate(7deg); }
-.tilt-right-2 .beamWrap{ transform:rotate(14deg); }
+/* tilt classes */
+.tilt-left-1  .beamWrap{ transform:rotate(calc(var(--tilt-1) * -1)); }
+.tilt-left-2  .beamWrap{ transform:rotate(calc(var(--tilt-2) * -1)); }
+.tilt-right-1 .beamWrap{ transform:rotate(var(--tilt-1)); }
+.tilt-right-2 .beamWrap{ transform:rotate(var(--tilt-2)); }
 
 .counter{
   display:flex;
-  gap:10px;
   justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
   margin-top:8px;
 }
 
@@ -105,12 +120,19 @@ svg{ width:100%; max-width:680px; height:auto; }
   font-size:14px;
 }
 
+.instruction{
+  text-align:center;
+  font-size:14px;
+  margin:10px 0 4px;
+  opacity:.9;
+}
+
 .controls{
   display:flex;
   flex-wrap:wrap;
   gap:8px;
   justify-content:center;
-  margin-top:12px;
+  margin-top:6px;
 }
 
 button{
@@ -119,6 +141,7 @@ button{
   border:1px solid var(--border);
   background:rgba(255,255,255,.85);
   font-weight:600;
+  font-size:14px;
   cursor:pointer;
   white-space:nowrap;
 }
@@ -127,10 +150,14 @@ button{
   width:110px;
   height:108px;
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap:4px 6px;
   justify-items:center;
+  padding:6px 6px 8px;
+  overflow:hidden;
   font-size:20px;
+  line-height:1;
+  user-select:none;
 }
 
 .slot{
@@ -141,6 +168,7 @@ button{
 }
 .slot.empty{ opacity:0; }
 
+/* -------- Namespaced modals -------- */
 .exoModalBackdrop{
   position:fixed;
   inset:0;
@@ -148,22 +176,27 @@ button{
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:9999;
+  padding:16px;
+  z-index:2147483647;
 }
 .exoModalBackdrop.is-open{ display:flex; }
 
 .exoModalPanel{
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  max-width:560px;
+  width:min(560px, 100%);
+  background:rgba(255,255,255,.95);
   border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.18);
 }
+.exoModalPanel h3{ font-size:16px; margin-bottom:8px; }
+.exoModalPanel p{ font-size:14px; opacity:.9; margin-bottom:12px; line-height:1.35; }
+
 .exoModalActions{
   display:flex;
   gap:10px;
+  flex-wrap:wrap;
   justify-content:center;
-  margin-top:10px;
 }
 </style>
 </head>
@@ -171,9 +204,9 @@ button{
 <body>
 <div class="wrap" id="wrap">
 
-  <div class="headline">
+  <div class="headline" aria-live="polite">
     <div class="bubble" id="headlineBubble">
-      🧭 Click a button to see what happens.
+      🧭 Click a button to see what happens next.
     </div>
   </div>
 
@@ -186,6 +219,10 @@ button{
       <g class="beamWrap">
         <g class="beam">
           <path d="M160 210H440" stroke="#aaa" stroke-width="10" stroke-linecap="round"/>
+          <path d="M220 210V340" stroke="#ccc" stroke-width="6"/>
+          <path d="M380 210V340" stroke="#ccc" stroke-width="6"/>
+          <path d="M165 340H275" stroke="#ccc" stroke-width="8"/>
+          <path d="M325 340H435" stroke="#ccc" stroke-width="8"/>
 
           <foreignObject x="165" y="232" width="110" height="108">
             <div xmlns="http://www.w3.org/1999/xhtml" id="shelfBox" class="stackBox"></div>
@@ -204,32 +241,72 @@ button{
     </div>
   </div>
 
+  <div class="instruction">
+    Click a button to see what happens.
+  </div>
+
   <div class="controls">
-    <button id="saleAcc">Accurate sale</button>
-    <button id="wasteNR">Waste not recorded</button>
-    <button id="deliveryMissing">Missing delivery item</button>
-    <button id="countFix">Accurate count</button>
-    <button id="restart">Restart</button>
+    <button type="button" id="saleAcc">✅ Accurate sale</button>
+    <button type="button" id="delAcc">📦 Accurate delivery</button>
+
+    <button type="button" id="tillErr">🧾 Till error</button>
+
+    <button type="button" id="wasteNR">🗑️ Waste not recorded</button>
+    <button type="button" id="theft">🕵️ Theft</button>
+    <button type="button" id="deliveryMissing">📭 Delivery missing item</button>
+
+    <button type="button" id="countFix">🧮 Accurate daily count</button>
+    <button type="button" id="countBad">⚠️ Inaccurate daily count</button>
+
+    <button type="button" id="restart">🔄 Restart</button>
   </div>
 </div>
 
-<div class="exoModalBackdrop" id="maskModal">
+<!-- Inaccurate count modal -->
+<div class="exoModalBackdrop" id="countModal" role="dialog" aria-modal="true" aria-labelledby="countModalTitle">
   <div class="exoModalPanel">
-    <h3>⚠️ Looks balanced, but something’s off</h3>
+    <h3 id="countModalTitle">⚠️ Inaccurate daily count</h3>
+    <p>What caused the mistake?</p>
+    <div class="exoModalActions">
+      <button type="button" id="chooseUnder">📉 Not all items were counted.</button>
+      <button type="button" id="chooseOver">📈 Too many items were added to the count.</button>
+      <button type="button" id="chooseCancel">↩️ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Till error modal -->
+<div class="exoModalBackdrop" id="tillModal" role="dialog" aria-modal="true" aria-labelledby="tillModalTitle">
+  <div class="exoModalPanel">
+    <h3 id="tillModalTitle">🧾 Till error</h3>
+    <p>What happened at the till?</p>
+    <div class="exoModalActions">
+      <button type="button" id="tillWrongScan">🟦 Wrong product scanned</button>
+      <button type="button" id="tillMissedScan">🟧 Sold but not scanned</button>
+      <button type="button" id="tillCancel">↩️ Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Balanced-but-untrusted modal -->
+<div class="exoModalBackdrop" id="maskModal" role="dialog" aria-modal="true" aria-labelledby="maskModalTitle">
+  <div class="exoModalPanel">
+    <h3 id="maskModalTitle">⚠️ Looks balanced, but something’s off</h3>
     <p>
-      The shelf and system match, but only because mistakes cancelled each other out.<br>
+      The shelf and system match, but only because mistakes cancelled each other out.
+      That means something else has been knocked out of line — often another product in the system.<br>
       <strong>Matching numbers isn’t proof it’s correct.</strong><br>
       Only an accurate count puts things back in line.
     </p>
     <div class="exoModalActions">
-      <button id="maskReset">Accurate count</button>
+      <button type="button" id="maskReset">🧮 Accurate count</button>
     </div>
   </div>
 </div>
 
 <script>
 let shelf = 5, system = 5;
-let hasMistake = false, maskShown = false;
+const START = 5, MAX = 30, SLOTS = 12;
 
 const wrap = document.getElementById("wrap");
 const shelfBox = document.getElementById("shelfBox");
@@ -237,93 +314,255 @@ const systemBox = document.getElementById("systemBox");
 const shelfCount = document.getElementById("shelfCount");
 const systemCount = document.getElementById("systemCount");
 const headline = document.getElementById("headlineBubble");
+
+/* modals */
+const countModal = document.getElementById("countModal");
+const chooseUnder = document.getElementById("chooseUnder");
+const chooseOver = document.getElementById("chooseOver");
+const chooseCancel = document.getElementById("chooseCancel");
+
+const tillModal = document.getElementById("tillModal");
+const tillWrongScan = document.getElementById("tillWrongScan");
+const tillMissedScan = document.getElementById("tillMissedScan");
+const tillCancel = document.getElementById("tillCancel");
+
 const maskModal = document.getElementById("maskModal");
+const maskReset = document.getElementById("maskReset");
 
-const SLOTS = 12;
+let swayTimeout = null;
 
-function draw(box, count){
-  box.innerHTML = "";
+/* Trust flag: if any mistake happens since last accurate count, we don't allow "green" */
+let hasMistake = false;
+let maskShown = false;
+
+function setHeadline(t){ headline.textContent = t; }
+
+function drawStack(box, count){
+  box.innerHTML="";
   const shown = Math.min(count, SLOTS);
 
   for(let i=0;i<SLOTS-shown;i++){
     const s=document.createElement("span");
-    s.className="slot empty";
-    s.textContent="🥫";
-    box.appendChild(s);
+    s.className="slot empty"; s.textContent="🥫"; box.appendChild(s);
   }
   for(let i=0;i<shown;i++){
     const s=document.createElement("span");
-    s.className="slot";
-    s.textContent="🥫";
-    box.appendChild(s);
+    s.className="slot"; s.textContent="🥫"; box.appendChild(s);
+  }
+}
+
+function clearTilt(){
+  wrap.classList.remove("tilt-left-1","tilt-left-2","tilt-right-1","tilt-right-2");
+}
+function clearState(){
+  wrap.classList.remove("state-ok","state-warn","state-bad");
+}
+
+function startSway(){ wrap.classList.add("swaying"); }
+function stopSway(){ wrap.classList.remove("swaying"); }
+
+function openModal(m){ m.classList.add("is-open"); }
+function closeModal(m){ m.classList.remove("is-open"); }
+
+function closeAllModals(){
+  closeModal(countModal);
+  closeModal(tillModal);
+  closeModal(maskModal);
+}
+
+function accurateCount(){
+  system = shelf;
+  hasMistake = false;
+  maskShown = false;
+  closeAllModals();
+  stopSway();
+  setHeadline("🧮 Accurate count — system reset to match the shelf.");
+  render();
+}
+
+function restart(){
+  shelf = START;
+  system = START;
+  hasMistake = false;
+  maskShown = false;
+  closeAllModals();
+  stopSway();
+  setHeadline("🔄 Restarted.");
+  render();
+}
+
+/* Close modal if clicking the backdrop */
+[countModal, tillModal, maskModal].forEach(m=>{
+  m.addEventListener("click", (e)=>{
+    if(e.target === m){
+      closeModal(m);
+      stopSway();
+      render();
+    }
+  });
+});
+
+maskReset.addEventListener("click", (e)=>{ e.preventDefault(); accurateCount(); });
+
+function applyTilt(){
+  clearTilt();
+  clearState();
+
+  const diff = system - shelf;
+  const abs = Math.abs(diff);
+
+  if(!abs && !hasMistake){
+    wrap.classList.add("state-ok");
+    setHeadline("✅ System and shelf match.");
+    return;
+  }
+
+  if(!abs && hasMistake){
+    wrap.classList.add("state-warn");
+    setHeadline("⚠️ Numbers match, but errors are hidden.");
+
+    if(!maskShown){
+      maskShown = true;
+      closeAllModals();
+      openModal(maskModal);
+    }
+    return;
+  }
+
+  const level = abs >= 3 ? 2 : 1;
+  wrap.classList.add(level === 2 ? "state-bad" : "state-warn");
+
+  if(diff > 0){
+    wrap.classList.add(level===2?"tilt-right-2":"tilt-right-1");
+    setHeadline(level===2
+      ? "🚫 Big mismatch → under-ordering → gaps & complaints"
+      : "⚠️ System higher → under-ordering → availability problems");
+  } else {
+    wrap.classList.add(level===2?"tilt-left-2":"tilt-left-1");
+    setHeadline(level===2
+      ? "📦 Big mismatch → over-ordering → overcrowding & waste"
+      : "🧱 Shelf higher → over-ordering → waste risk");
   }
 }
 
 function render(){
   shelfCount.textContent = shelf;
   systemCount.textContent = system;
-
-  draw(shelfBox, shelf);
-  draw(systemBox, system);
-
-  wrap.className = "wrap";
-  const diff = system - shelf;
-
-  if(diff === 0 && !hasMistake){
-    wrap.classList.add("state-ok");
-    headline.textContent = "✅ System and shelf match.";
-    return;
-  }
-
-  if(diff === 0 && hasMistake){
-    wrap.classList.add("state-warn");
-    headline.textContent = "⚠️ Numbers match, but errors are hidden.";
-    if(!maskShown){
-      maskShown = true;
-      maskModal.classList.add("is-open");
-    }
-    return;
-  }
-
-  wrap.classList.add("state-warn");
-  headline.textContent = "⚠️ System and shelf are out of sync.";
+  drawStack(shelfBox, shelf);
+  drawStack(systemBox, system);
+  applyTilt();
 }
 
-document.getElementById("saleAcc").onclick = ()=>{
-  if(!shelf) return;
+/* Main buttons */
+document.getElementById("saleAcc").onclick=()=>{
+  if(!shelf) return setHeadline("🛑 Nothing left to sell.");
   shelf--; system--;
+  setHeadline("🛒 Accurate sale recorded.");
   render();
 };
-document.getElementById("wasteNR").onclick = ()=>{
-  if(!shelf) return;
-  shelf--; hasMistake = true;
+
+document.getElementById("delAcc").onclick=()=>{
+  const add = 3;
+  if(shelf + add > MAX || system + add > MAX) return setHeadline("⛔ Demo limit reached.");
+  shelf += add; system += add;
+  setHeadline("📦 Accurate delivery recorded (+3).");
   render();
 };
-document.getElementById("deliveryMissing").onclick = ()=>{
-  system++; hasMistake = true;
+
+document.getElementById("wasteNR").onclick=()=>{
+  if(!shelf) return setHeadline("🛑 No stock left to waste.");
+  shelf--;
+  hasMistake = true;
+  setHeadline("🗑️ Waste not recorded — shelf drops only.");
   render();
 };
-document.getElementById("countFix").onclick = ()=>{
-  system = shelf;
-  hasMistake = false;
-  maskShown = false;
-  maskModal.classList.remove("is-open");
+
+document.getElementById("theft").onclick=()=>{
+  if(!shelf) return setHeadline("🛑 No stock left to lose.");
+  shelf--;
+  hasMistake = true;
+  setHeadline("🕵️ Theft — shelf drops only.");
   render();
 };
-document.getElementById("maskReset").onclick = ()=>{
-  system = shelf;
-  hasMistake = false;
-  maskShown = false;
-  maskModal.classList.remove("is-open");
+
+document.getElementById("deliveryMissing").onclick=()=>{
+  if(system >= MAX) return setHeadline("⛔ Demo limit reached.");
+  system++;
+  hasMistake = true;
+  setHeadline("📭 Delivery missing item — system increases only.");
   render();
 };
-document.getElementById("restart").onclick = ()=>{
-  shelf = system = 5;
-  hasMistake = false;
-  maskShown = false;
-  maskModal.classList.remove("is-open");
-  render();
+
+document.getElementById("countFix").onclick=()=>{
+  accurateCount();
 };
+
+/* Inaccurate daily count */
+document.getElementById("countBad").onclick=()=>{
+  setHeadline("⚠️ Inaccurate count detected — investigating...");
+  startSway();
+  closeAllModals();
+  if(swayTimeout) clearTimeout(swayTimeout);
+  swayTimeout = setTimeout(()=> openModal(countModal), 650);
+};
+
+chooseUnder.onclick=()=>{
+  shelf = Math.min(MAX, shelf + 2);
+  hasMistake = true;
+  setHeadline("📉 Undercount selected.");
+  closeAllModals(); stopSway(); render();
+};
+
+chooseOver.onclick=()=>{
+  shelf = Math.max(0, shelf - 2);
+  hasMistake = true;
+  setHeadline("📈 Overcount selected.");
+  closeAllModals(); stopSway(); render();
+};
+
+chooseCancel.onclick=()=>{
+  setHeadline("↩️ Cancelled — no changes applied.");
+  closeAllModals(); stopSway(); render();
+};
+
+/* Till error */
+document.getElementById("tillErr").onclick=()=>{
+  setHeadline("🧾 Till error — choose what happened.");
+  startSway();
+  closeAllModals();
+  if(swayTimeout) clearTimeout(swayTimeout);
+  swayTimeout = setTimeout(()=> openModal(tillModal), 650);
+};
+
+tillWrongScan.onclick=()=>{
+  if(!system){
+    setHeadline("🛑 System can't go below 0.");
+    closeAllModals(); stopSway(); return render();
+  }
+  system--;
+  hasMistake = true;
+  setHeadline("🔁 Wrong product scanned.");
+  closeAllModals(); stopSway(); render();
+};
+
+tillMissedScan.onclick=()=>{
+  if(!shelf){
+    setHeadline("🛑 Nothing left to leave the shop.");
+    closeAllModals(); stopSway(); return render();
+  }
+  shelf--;
+  hasMistake = true;
+  setHeadline("🧾 Sold but not scanned.");
+  closeAllModals(); stopSway(); render();
+};
+
+tillCancel.onclick=()=>{
+  setHeadline("↩️ Cancelled — no changes applied.");
+  closeAllModals(); stopSway(); render();
+};
+
+/* Restart */
+document.getElementById("restart").onclick=()=> restart();
 
 render();
 </script>
