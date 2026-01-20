@@ -7,9 +7,13 @@
 
 <meta name="robots" content="noindex, nofollow">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
 :root{
-  --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --font:'Poppins',system-ui,sans-serif;
   --border:rgba(0,0,0,.15);
   --bg:rgba(255,255,255,.75);
 
@@ -19,9 +23,10 @@
   --dur: 650ms;
   --ease: cubic-bezier(.2,.8,.2,1);
 
-  --ok-bg:   rgba(60, 180, 95, 0.08);
+  /* state backgrounds */
+  --ok-bg: rgba(60, 180, 95, 0.08);
   --warn-bg: rgba(220, 80, 80, 0.08);
-  --bad-bg:  rgba(220, 80, 80, 0.14);
+  --bad-bg: rgba(220, 80, 80, 0.14);
 }
 
 *{ box-sizing:border-box; margin:0; padding:0; font-family:var(--font); }
@@ -30,7 +35,7 @@ body{
   padding:12px;
   display:flex;
   justify-content:center;
-  background:#f4f7f4;
+  background:transparent;
   color:#000;
 }
 
@@ -51,7 +56,7 @@ body{
 .headline{
   display:grid;
   place-items:center;
-  margin: 0 0 6px;
+  margin: 0 0 2px;
   min-height: 30px;
 }
 .headline .bubble{
@@ -79,14 +84,12 @@ svg{
   height:auto;
 }
 
-/* Tilt applies to beamWrap */
 .beamWrap{
   transform-origin:300px 210px;
   transition:transform var(--dur) var(--ease);
   transform:rotate(0deg);
 }
 
-/* Sway animation applies to the inner beam only */
 @keyframes sway {
   0%   { transform: rotate(-5deg); }
   50%  { transform: rotate( 5deg); }
@@ -168,7 +171,23 @@ button{
 }
 .slot.empty{ opacity:0; }
 
-/* -------- Namespaced modals -------- */
+.foWrap{ width:110px; height:108px; }
+
+@media (max-width:480px){
+  body{ padding:10px; }
+  .wrap{ padding:6px 12px 12px; }
+  .headline .bubble{ font-size:12.5px; padding:8px 10px; }
+  .pill{ font-size:13px; }
+  button{ font-size:13px; padding:8px 12px; }
+  .instruction{ font-size:13px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .beamWrap{ transition:none; }
+  .beam{ animation:none !important; }
+}
+
+/* --- Namespaced modal classes (safer if embedded anywhere) --- */
 .exoModalBackdrop{
   position:fixed;
   inset:0;
@@ -177,11 +196,11 @@ button{
   align-items:center;
   justify-content:center;
   padding:16px;
-  z-index:2147483647;
+  z-index:9999;
 }
-.exoModalBackdrop.is-open{ display:flex; }
+.exoModalBackdrop.show{ display:flex; }
 
-.exoModalPanel{
+.exoModal{
   width:min(560px, 100%);
   background:rgba(255,255,255,.95);
   border:1px solid var(--border);
@@ -189,9 +208,16 @@ button{
   padding:14px;
   box-shadow: 0 10px 30px rgba(0,0,0,.18);
 }
-.exoModalPanel h3{ font-size:16px; margin-bottom:8px; }
-.exoModalPanel p{ font-size:14px; opacity:.9; margin-bottom:12px; line-height:1.35; }
-
+.exoModal h3{
+  font-size:16px;
+  margin-bottom:8px;
+}
+.exoModal p{
+  font-size:14px;
+  opacity:.9;
+  margin-bottom:12px;
+  line-height:1.35;
+}
 .exoModalActions{
   display:flex;
   gap:10px;
@@ -225,19 +251,23 @@ button{
           <path d="M325 340H435" stroke="#ccc" stroke-width="8"/>
 
           <foreignObject x="165" y="232" width="110" height="108">
-            <div xmlns="http://www.w3.org/1999/xhtml" id="shelfBox" class="stackBox"></div>
+            <div xmlns="http://www.w3.org/1999/xhtml" class="foWrap">
+              <div id="shelfBox" class="stackBox"></div>
+            </div>
           </foreignObject>
 
           <foreignObject x="325" y="232" width="110" height="108">
-            <div xmlns="http://www.w3.org/1999/xhtml" id="systemBox" class="stackBox"></div>
+            <div xmlns="http://www.w3.org/1999/xhtml" class="foWrap">
+              <div id="systemBox" class="stackBox"></div>
+            </div>
           </foreignObject>
         </g>
       </g>
     </svg>
 
     <div class="counter">
-      <div class="pill">🧺 Shelf: <span id="shelfCount">5</span></div>
-      <div class="pill">💻 System: <span id="systemCount">5</span></div>
+      <div class="pill">🧺 On the shelf: <span id="shelfCount">5</span></div>
+      <div class="pill">💻 In the system: <span id="systemCount">5</span></div>
     </div>
   </div>
 
@@ -262,9 +292,9 @@ button{
   </div>
 </div>
 
-<!-- Inaccurate count modal -->
+<!-- Modal for inaccurate count -->
 <div class="exoModalBackdrop" id="countModal" role="dialog" aria-modal="true" aria-labelledby="countModalTitle">
-  <div class="exoModalPanel">
+  <div class="exoModal">
     <h3 id="countModalTitle">⚠️ Inaccurate daily count</h3>
     <p>What caused the mistake?</p>
     <div class="exoModalActions">
@@ -275,22 +305,22 @@ button{
   </div>
 </div>
 
-<!-- Till error modal -->
+<!-- Modal for till error -->
 <div class="exoModalBackdrop" id="tillModal" role="dialog" aria-modal="true" aria-labelledby="tillModalTitle">
-  <div class="exoModalPanel">
+  <div class="exoModal">
     <h3 id="tillModalTitle">🧾 Till error</h3>
     <p>What happened at the till?</p>
     <div class="exoModalActions">
-      <button type="button" id="tillWrongScan">🟦 Wrong product scanned</button>
-      <button type="button" id="tillMissedScan">🟧 Sold but not scanned</button>
+      <button type="button" id="tillWrongScan"> 🟦 This item was scanned, but a different product was sold.</button>
+      <button type="button" id="tillMissedScan"> 🟧 This item was sold, but it wasn’t scanned.</button>
       <button type="button" id="tillCancel">↩️ Cancel</button>
     </div>
   </div>
 </div>
 
-<!-- Balanced-but-untrusted modal -->
+<!-- Modal for "balanced but still wrong" (mistakes cancelled out) -->
 <div class="exoModalBackdrop" id="maskModal" role="dialog" aria-modal="true" aria-labelledby="maskModalTitle">
-  <div class="exoModalPanel">
+  <div class="exoModal">
     <h3 id="maskModalTitle">⚠️ Looks balanced, but something’s off</h3>
     <p>
       The shelf and system match, but only because mistakes cancelled each other out.
@@ -305,8 +335,20 @@ button{
 </div>
 
 <script>
-let shelf = 5, system = 5;
-const START = 5, MAX = 30, SLOTS = 12;
+/* --- config + state --- */
+const START = 5;
+const MAX = 30;
+const SLOTS = 12;
+
+let shelf = START;
+let system = START;
+
+/*
+  SIMPLE TRUST RULE:
+  If any mistake happens since the last accurate count, we don't trust "green" even if numbers match.
+*/
+let hasMistake = false;
+let maskShown = false;
 
 const wrap = document.getElementById("wrap");
 const shelfBox = document.getElementById("shelfBox");
@@ -331,16 +373,16 @@ const maskReset = document.getElementById("maskReset");
 
 let swayTimeout = null;
 
-/* Trust flag: if any mistake happens since last accurate count, we don't allow "green" */
-let hasMistake = false;
-let maskShown = false;
-
 function setHeadline(t){ headline.textContent = t; }
+
+function clampAll(){
+  shelf = Math.max(0, Math.min(MAX, shelf));
+  system = Math.max(0, Math.min(MAX, system));
+}
 
 function drawStack(box, count){
   box.innerHTML="";
   const shown = Math.min(count, SLOTS);
-
   for(let i=0;i<SLOTS-shown;i++){
     const s=document.createElement("span");
     s.className="slot empty"; s.textContent="🥫"; box.appendChild(s);
@@ -354,6 +396,7 @@ function drawStack(box, count){
 function clearTilt(){
   wrap.classList.remove("tilt-left-1","tilt-left-2","tilt-right-1","tilt-right-2");
 }
+
 function clearState(){
   wrap.classList.remove("state-ok","state-warn","state-bad");
 }
@@ -361,8 +404,8 @@ function clearState(){
 function startSway(){ wrap.classList.add("swaying"); }
 function stopSway(){ wrap.classList.remove("swaying"); }
 
-function openModal(m){ m.classList.add("is-open"); }
-function closeModal(m){ m.classList.remove("is-open"); }
+function openModal(m){ m.classList.add("show"); }
+function closeModal(m){ m.classList.remove("show"); }
 
 function closeAllModals(){
   closeModal(countModal);
@@ -370,6 +413,7 @@ function closeAllModals(){
   closeModal(maskModal);
 }
 
+/* accurate count is the only way to restore trust */
 function accurateCount(){
   system = shelf;
   hasMistake = false;
@@ -380,6 +424,7 @@ function accurateCount(){
   render();
 }
 
+/* full restart */
 function restart(){
   shelf = START;
   system = START;
@@ -402,7 +447,7 @@ function restart(){
   });
 });
 
-maskReset.addEventListener("click", (e)=>{ e.preventDefault(); accurateCount(); });
+maskReset.onclick = accurateCount;
 
 function applyTilt(){
   clearTilt();
@@ -411,12 +456,14 @@ function applyTilt(){
   const diff = system - shelf;
   const abs = Math.abs(diff);
 
+  // Balanced & trusted
   if(!abs && !hasMistake){
     wrap.classList.add("state-ok");
-    setHeadline("✅ System and shelf match.");
+    setHeadline("✅ System matches shelf — ordering and deliveries are correct.");
     return;
   }
 
+  // Balanced but not trusted (mistakes happened)
   if(!abs && hasMistake){
     wrap.classList.add("state-warn");
     setHeadline("⚠️ Numbers match, but errors are hidden.");
@@ -429,6 +476,7 @@ function applyTilt(){
     return;
   }
 
+  // Unbalanced
   const level = abs >= 3 ? 2 : 1;
   wrap.classList.add(level === 2 ? "state-bad" : "state-warn");
 
@@ -446,6 +494,7 @@ function applyTilt(){
 }
 
 function render(){
+  clampAll();
   shelfCount.textContent = shelf;
   systemCount.textContent = system;
   drawStack(shelfBox, shelf);
@@ -453,7 +502,7 @@ function render(){
   applyTilt();
 }
 
-/* Main buttons */
+/* --- main buttons --- */
 document.getElementById("saleAcc").onclick=()=>{
   if(!shelf) return setHeadline("🛑 Nothing left to sell.");
   shelf--; system--;
@@ -493,76 +542,94 @@ document.getElementById("deliveryMissing").onclick=()=>{
   render();
 };
 
-document.getElementById("countFix").onclick=()=>{
-  accurateCount();
-};
+document.getElementById("countFix").onclick=accurateCount;
 
-/* Inaccurate daily count */
+/* Inaccurate stock count */
 document.getElementById("countBad").onclick=()=>{
   setHeadline("⚠️ Inaccurate count detected — investigating...");
   startSway();
   closeAllModals();
+
   if(swayTimeout) clearTimeout(swayTimeout);
   swayTimeout = setTimeout(()=> openModal(countModal), 650);
 };
 
 chooseUnder.onclick=()=>{
-  shelf = Math.min(MAX, shelf + 2);
+  const delta = 2;
+  shelf = Math.min(MAX, shelf + delta);
   hasMistake = true;
-  setHeadline("📉 Undercount selected.");
-  closeAllModals(); stopSway(); render();
+  setHeadline("📉 Undercount: more items were on the shelf than in the system.");
+  closeAllModals();
+  stopSway();
+  render();
 };
 
 chooseOver.onclick=()=>{
-  shelf = Math.max(0, shelf - 2);
+  const delta = 2;
+  shelf = Math.max(0, shelf - delta);
   hasMistake = true;
-  setHeadline("📈 Overcount selected.");
-  closeAllModals(); stopSway(); render();
+  setHeadline("📈 Overcount: fewer items were on the shelf than in the system.");
+  closeAllModals();
+  stopSway();
+  render();
 };
 
 chooseCancel.onclick=()=>{
   setHeadline("↩️ Cancelled — no changes applied.");
-  closeAllModals(); stopSway(); render();
+  closeAllModals();
+  stopSway();
+  render();
 };
 
 /* Till error */
 document.getElementById("tillErr").onclick=()=>{
-  setHeadline("🧾 Till error — choose what happened.");
+  setHeadline("🧾 Till error — What happened at the checkout?");
   startSway();
   closeAllModals();
+
   if(swayTimeout) clearTimeout(swayTimeout);
   swayTimeout = setTimeout(()=> openModal(tillModal), 650);
 };
 
 tillWrongScan.onclick=()=>{
   if(!system){
-    setHeadline("🛑 System can't go below 0.");
-    closeAllModals(); stopSway(); return render();
+    setHeadline("🛑 In the system can't go below 0.");
+    closeAllModals();
+    stopSway();
+    return render();
   }
   system--;
   hasMistake = true;
-  setHeadline("🔁 Wrong product scanned.");
-  closeAllModals(); stopSway(); render();
+  setHeadline("🔁 Wrong product scanned: the system changed for the wrong item.");
+  closeAllModals();
+  stopSway();
+  render();
 };
 
 tillMissedScan.onclick=()=>{
   if(!shelf){
     setHeadline("🛑 Nothing left to leave the shop.");
-    closeAllModals(); stopSway(); return render();
+    closeAllModals();
+    stopSway();
+    return render();
   }
   shelf--;
   hasMistake = true;
-  setHeadline("🧾 Sold but not scanned.");
-  closeAllModals(); stopSway(); render();
+  setHeadline("🧾 Not scanned: shelf drops, system doesn’t.");
+  closeAllModals();
+  stopSway();
+  render();
 };
 
 tillCancel.onclick=()=>{
   setHeadline("↩️ Cancelled — no changes applied.");
-  closeAllModals(); stopSway(); render();
+  closeAllModals();
+  stopSway();
+  render();
 };
 
-/* Restart */
-document.getElementById("restart").onclick=()=> restart();
+/* Restart button */
+document.getElementById("restart").onclick=restart;
 
 render();
 </script>
